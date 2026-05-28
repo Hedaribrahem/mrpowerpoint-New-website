@@ -1,19 +1,44 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
-import { UserPlus, Mail, Lock, Eye, EyeOff, User, Phone } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { UserPlus, Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 export default function RegisterPage() {
-  const [name, setName] = useState('');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [agreed, setAgreed] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { signUp } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      toast.error('كلمات المرور غير متطابقة');
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await signUp(email, password, fullName);
+      toast.success('تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول');
+      navigate('/login');
+    } catch (error: any) {
+      toast.error(error.message || 'خطأ في إنشاء الحساب');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -30,7 +55,7 @@ export default function RegisterPage() {
                 <UserPlus className="w-8 h-8 text-brand-red" />
               </div>
               <h1 className="text-2xl font-bold">إنشاء حساب</h1>
-              <p className="text-muted-foreground text-sm mt-1">انضم إلى مجتمع Mr PowerPoint</p>
+              <p className="text-muted-foreground text-sm mt-1">انضم إلى Mr PowerPoint اليوم</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -40,10 +65,11 @@ export default function RegisterPage() {
                   <User className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="محمد العلي"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="محمد أحمد"
                     required
+                    disabled={isLoading}
                     className="w-full pr-10 pl-4 py-3 rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-brand-red/30"
                   />
                 </div>
@@ -59,20 +85,7 @@ export default function RegisterPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="your@email.com"
                     required
-                    className="w-full pr-10 pl-4 py-3 rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-brand-red/30"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">رقم الهاتف</label>
-                <div className="relative">
-                  <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+966 50 000 0000"
+                    disabled={isLoading}
                     className="w-full pr-10 pl-4 py-3 rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-brand-red/30"
                   />
                 </div>
@@ -88,6 +101,7 @@ export default function RegisterPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
+                    disabled={isLoading}
                     className="w-full pr-10 pl-12 py-3 rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-brand-red/30"
                   />
                   <button
@@ -110,34 +124,25 @@ export default function RegisterPage() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     required
+                    disabled={isLoading}
                     className="w-full pr-10 pl-4 py-3 rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-brand-red/30"
                   />
                 </div>
               </div>
 
-              <label className="flex items-start gap-2 cursor-pointer text-sm">
-                <input
-                  type="checkbox"
-                  checked={agreed}
-                  onChange={(e) => setAgreed(e.target.checked)}
-                  required
-                  className="rounded border-input mt-0.5"
-                />
-                <span className="text-muted-foreground">
-                  أوافق على <Link to="#" className="text-brand-red hover:underline">شروط الاستخدام</Link> و{' '}
-                  <Link to="#" className="text-brand-red hover:underline">سياسة الخصوصية</Link>
-                </span>
-              </label>
-
-              <button type="submit" className="w-full btn-primary py-3">
-                إنشاء الحساب
+              <button 
+                type="submit" 
+                className="w-full btn-primary py-3"
+                disabled={isLoading}
+              >
+                {isLoading ? 'جاري الإنشاء...' : 'إنشاء حساب'}
               </button>
             </form>
 
             <p className="text-center text-sm text-muted-foreground mt-6">
               لديك حساب بالفعل؟{' '}
               <Link to="/login" className="text-brand-red hover:underline font-medium">
-                سجّل الدخول
+                تسجيل الدخول
               </Link>
             </p>
           </div>
