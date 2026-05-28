@@ -40,7 +40,7 @@ export default function RegisterPage() {
       
       setIsSuccess(true);
       
-      // ❌ محذوف: الانتقال التلقائي - المستخدم يضغط الزر بنفسه
+      // ❌ لا انتقال تلقائي - المستخدم يضغط الزر بنفسه
       
     } catch (error: any) {
       let errorMessage = 'حدث خطأ أثناء إنشاء الحساب';
@@ -62,7 +62,7 @@ export default function RegisterPage() {
     }
   };
 
-  // ✅ شاشة النجاح - بدون انتقال تلقائي
+  // ✅ شاشة النجاح - بدون انتقال تلقائي نهائياً
   if (isSuccess) {
     return (
       <>
@@ -82,7 +82,6 @@ export default function RegisterPage() {
                 تم إنشاء حسابك بنجاح. يمكنك الآن تسجيل الدخول.
               </p>
               
-              {/* ✅ زر وحيد - المستخدم يضغط عليه بنفسه */}
               <button 
                 onClick={() => navigate('/login')}
                 className="w-full btn-primary py-3"
