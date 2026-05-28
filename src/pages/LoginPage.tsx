@@ -1,17 +1,40 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LogIn, Mail, Lock, Eye, EyeOff, Chrome } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login
+    setIsLoading(true);
+
+    try {
+      await signIn(email, password);
+      toast.success('تم تسجيل الدخول بنجاح!');
+      navigate('/dashboard');
+    } catch (error: any) {
+      toast.error(error.message || 'خطأ في تسجيل الدخول');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error: any) {
+      toast.error(error.message || 'خطأ في تسجيل الدخول عبر Google');
+    }
   };
 
   return (
@@ -42,6 +65,7 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="your@email.com"
                     required
+                    disabled={isLoading}
                     className="w-full pr-10 pl-4 py-3 rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-brand-red/30"
                   />
                 </div>
@@ -57,6 +81,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
+                    disabled={isLoading}
                     className="w-full pr-10 pl-12 py-3 rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-brand-red/30"
                   />
                   <button
@@ -84,8 +109,12 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              <button type="submit" className="w-full btn-primary py-3">
-                دخول
+              <button 
+                type="submit" 
+                className="w-full btn-primary py-3"
+                disabled={isLoading}
+              >
+                {isLoading ? 'جاري الدخول...' : 'دخول'}
               </button>
             </form>
 
@@ -98,7 +127,11 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <button className="w-full flex items-center justify-center gap-2 py-3 border border-input rounded-xl hover:bg-muted transition-colors">
+            <button 
+              onClick={handleGoogleSignIn}
+              className="w-full flex items-center justify-center gap-2 py-3 border border-input rounded-xl hover:bg-muted transition-colors"
+              disabled={isLoading}
+            >
               <Chrome className="w-5 h-5" />
               تسجيل الدخول عبر Google
             </button>
