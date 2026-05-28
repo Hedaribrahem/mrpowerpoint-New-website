@@ -12,7 +12,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false); // ✅ حالة النجاح
+  const [isSuccess, setIsSuccess] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -34,21 +34,15 @@ export default function RegisterPage() {
     try {
       await signUp(email, password, fullName);
       
-      // ✅ رسالة نجاح واضحة
       toast.success('🎉 تم إنشاء الحساب بنجاح!', {
-        duration: 3000, // تظهر لـ 3 ثواني
+        duration: 3000,
       });
       
-      // ✅ تغيير الحالة لعرض شاشة النجاح
       setIsSuccess(true);
       
-      // ⏳ انتظر 3 ثواني قبل النقل
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
+      // ❌ محذوف: الانتقال التلقائي - المستخدم يضغط الزر بنفسه
       
     } catch (error: any) {
-      // ✅ رسائل خطأ مخصصة
       let errorMessage = 'حدث خطأ أثناء إنشاء الحساب';
       
       if (error.message?.includes('User already registered')) {
@@ -68,7 +62,7 @@ export default function RegisterPage() {
     }
   };
 
-  // ✅ شاشة النجاح بعد التسجيل
+  // ✅ شاشة النجاح - بدون انتقال تلقائي
   if (isSuccess) {
     return (
       <>
@@ -88,18 +82,14 @@ export default function RegisterPage() {
                 تم إنشاء حسابك بنجاح. يمكنك الآن تسجيل الدخول.
               </p>
               
-              <div className="space-y-3">
-                <button 
-                  onClick={() => navigate('/login')}
-                  className="w-full btn-primary py-3"
-                >
-                  تسجيل الدخول الآن
-                </button>
-                
-                <p className="text-sm text-muted-foreground">
-                  سيتم تحويلك تلقائياً خلال 3 ثواني...
-                </p>
-              </div>
+              {/* ✅ زر وحيد - المستخدم يضغط عليه بنفسه */}
+              <button 
+                onClick={() => navigate('/login')}
+                className="w-full btn-primary py-3"
+              >
+                تسجيل الدخول الآن
+              </button>
+              
             </div>
           </div>
         </div>
