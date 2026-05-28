@@ -1,0 +1,175 @@
+export interface Template {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  style: string;
+  color: string;
+  field: string;
+  downloads: number;
+  rating: number;
+  reviewCount: number;
+  badge: 'free' | 'vip' | 'new' | null;
+  image: string;
+  slides: number;
+  dateAdded: string;
+}
+
+export const categories = [
+  { id: 'business', name: 'أعمال', icon: '💼' },
+  { id: 'education', name: 'تعليم', icon: '🎓' },
+  { id: 'medical', name: 'طبي', icon: '🏥' },
+  { id: 'technology', name: 'تقنية', icon: '💻' },
+  { id: 'creative', name: 'إبداعي', icon: '🎨' },
+  { id: 'marketing', name: 'تسويق', icon: '📢' },
+];
+
+export const styles = ['كلاسيكي', 'عصري', 'إبداعي', 'مينيمالي', 'فاخر'];
+export const fields = ['تسويقي', 'تعليمي', 'استثماري', 'تقني', 'طبي', 'عام'];
+
+export const templates: Template[] = [
+  {
+    id: 1,
+    title: 'عرض تسويقي احترافي',
+    description: 'قالب عرض تسويقي متكامل مع رسوم بيانية وأيقونات احترافية',
+    category: 'marketing',
+    style: 'عصري',
+    color: 'أحمر',
+    field: 'تسويقي',
+    downloads: 12500,
+    rating: 4.8,
+    reviewCount: 342,
+    badge: 'free',
+    image: '/templates/template1.jpg',
+    slides: 25,
+    dateAdded: '2025-05-20',
+  },
+  {
+    id: 2,
+    title: 'عرض تعليمي تفاعلي',
+    description: 'قالب تعليمي مثالي للمعلمين والمدربين مع عناصر تفاعلية',
+    category: 'education',
+    style: 'إبداعي',
+    color: 'أزرق',
+    field: 'تعليمي',
+    downloads: 8900,
+    rating: 4.6,
+    reviewCount: 215,
+    badge: 'free',
+    image: '/templates/template2.jpg',
+    slides: 30,
+    dateAdded: '2025-05-18',
+  },
+  {
+    id: 3,
+    title: 'عرض طبي متقدم',
+    description: 'قالب طبي احترافي للمؤتمرات والحالات الطبية',
+    category: 'medical',
+    style: 'مينيمالي',
+    color: 'أخضر',
+    field: 'طبي',
+    downloads: 5400,
+    rating: 4.9,
+    reviewCount: 178,
+    badge: 'vip',
+    image: '/templates/template3.jpg',
+    slides: 20,
+    dateAdded: '2025-05-15',
+  },
+  {
+    id: 4,
+    title: 'عرض تقني للشركات الناشئة',
+    description: 'قالب مخصص لشركات التقنية والناشئين مع رسوم بيانية حديثة',
+    category: 'technology',
+    style: 'عصري',
+    color: 'بنفسجي',
+    field: 'تقني',
+    downloads: 11200,
+    rating: 4.7,
+    reviewCount: 289,
+    badge: 'free',
+    image: '/templates/template4.jpg',
+    slides: 18,
+    dateAdded: '2025-05-12',
+  },
+  {
+    id: 5,
+    title: 'عرض استثماري فاخر',
+    description: 'قالب فاخر للعروض الاستثمارية والمالية',
+    category: 'business',
+    style: 'فاخر',
+    color: 'ذهبي',
+    field: 'استثماري',
+    downloads: 6700,
+    rating: 4.9,
+    reviewCount: 156,
+    badge: 'vip',
+    image: '/templates/template5.jpg',
+    slides: 35,
+    dateAdded: '2025-05-10',
+  },
+  {
+    id: 6,
+    title: 'عرض إبداعي للمصممين',
+    description: 'قالب إبداعي مثالي لعرض المحافظ والأعمال الإبداعية',
+    category: 'creative',
+    style: 'إبداعي',
+    color: 'متعدد',
+    field: 'عام',
+    downloads: 9300,
+    rating: 4.5,
+    reviewCount: 198,
+    badge: 'free',
+    image: '/templates/template6.jpg',
+    slides: 22,
+    dateAdded: '2025-05-08',
+  },
+  {
+    id: 7,
+    title: 'عرض أعمال كلاسيكي',
+    description: 'قالب كلاسيكي أنيق للعروض التجارية والتقارير',
+    category: 'business',
+    style: 'كلاسيكي',
+    color: 'أزرق داكن',
+    field: 'تسويقي',
+    downloads: 7800,
+    rating: 4.4,
+    reviewCount: 167,
+    badge: 'free',
+    image: '/templates/template7.jpg',
+    slides: 28,
+    dateAdded: '2025-05-05',
+  },
+  {
+    id: 8,
+    title: 'عرض تعليمي للأطفال',
+    description: 'قالب ملون وجذاب للتعليم الابتدائي',
+    category: 'education',
+    style: 'إبداعي',
+    color: 'متعدد',
+    field: 'تعليمي',
+    downloads: 15600,
+    rating: 4.7,
+    reviewCount: 423,
+    badge: 'new',
+    image: '/templates/template8.jpg',
+    slides: 15,
+    dateAdded: '2025-05-25',
+  },
+  {
+    id: 9,
+    title: 'عرض تسويقي لموسمي',
+    description: 'قالب موسمي مثالي للحملات التسويقية والعروض',
+    category: 'marketing',
+    style: 'عصري',
+    color: 'أحمر',
+    field: 'تسويقي',
+    downloads: 4200,
+    rating: 4.3,
+    reviewCount: 98,
+    badge: 'vip',
+    image: '/templates/template9.jpg',
+    slides: 20,
+    dateAdded: '2025-05-01',
+  },
+];
