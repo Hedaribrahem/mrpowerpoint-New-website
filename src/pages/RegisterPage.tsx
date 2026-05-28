@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserPlus, Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
+import { UserPlus, Mail, Lock, Eye, EyeOff, User, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 
@@ -12,6 +12,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false); // ✅ حالة النجاح
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -32,14 +33,79 @@ export default function RegisterPage() {
 
     try {
       await signUp(email, password, fullName);
-      toast.success('تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول');
-      navigate('/login');
+      
+      // ✅ رسالة نجاح واضحة
+      toast.success('🎉 تم إنشاء الحساب بنجاح!', {
+        duration: 3000, // تظهر لـ 3 ثواني
+      });
+      
+      // ✅ تغيير الحالة لعرض شاشة النجاح
+      setIsSuccess(true);
+      
+      // ⏳ انتظر 3 ثواني قبل النقل
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
+      
     } catch (error: any) {
-      toast.error(error.message || 'خطأ في إنشاء الحساب');
+      // ✅ رسائل خطأ مخصصة
+      let errorMessage = 'حدث خطأ أثناء إنشاء الحساب';
+      
+      if (error.message?.includes('User already registered')) {
+        errorMessage = 'هذا البريد الإلكتروني مسجل بالفعل';
+      } else if (error.message?.includes('Invalid email')) {
+        errorMessage = 'البريد الإلكتروني غير صالح';
+      } else if (error.message?.includes('Password should be')) {
+        errorMessage = 'كلمة المرور ضعيفة، يجب أن تكون 6 أحرف على الأقل';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
+      console.error('Register error:', error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // ✅ شاشة النجاح بعد التسجيل
+  if (isSuccess) {
+    return (
+      <>
+        <Helmet>
+          <title>تم التسجيل بنجاح | Mr PowerPoint</title>
+        </Helmet>
+
+        <div className="pt-[72px] min-h-screen flex items-center justify-center py-12 px-4">
+          <div className="w-full max-w-md text-center">
+            <div className="glass-card rounded-2xl p-8">
+              <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-6">
+                <CheckCircle className="w-10 h-10 text-green-500" />
+              </div>
+              
+              <h1 className="text-3xl font-bold mb-2">تم التسجيل بنجاح! 🎉</h1>
+              <p className="text-muted-foreground mb-6">
+                تم إنشاء حسابك بنجاح. يمكنك الآن تسجيل الدخول.
+              </p>
+              
+              <div className="space-y-3">
+                <button 
+                  onClick={() => navigate('/login')}
+                  className="w-full btn-primary py-3"
+                >
+                  تسجيل الدخول الآن
+                </button>
+                
+                <p className="text-sm text-muted-foreground">
+                  سيتم تحويلك تلقائياً خلال 3 ثواني...
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

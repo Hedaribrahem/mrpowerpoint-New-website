@@ -23,7 +23,21 @@ export default function LoginPage() {
       toast.success('تم تسجيل الدخول بنجاح!');
       navigate('/dashboard');
     } catch (error: any) {
-      toast.error(error.message || 'خطأ في تسجيل الدخول');
+      // ✅ رسالة خطأ واضحة بالعربي
+      let errorMessage = 'حدث خطأ أثناء تسجيل الدخول';
+      
+      if (error.message?.includes('Invalid login credentials')) {
+        errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+      } else if (error.message?.includes('Email not confirmed')) {
+        errorMessage = 'يرجى تأكيد بريدك الإلكتروني أولاً';
+      } else if (error.message?.includes('User not found')) {
+        errorMessage = 'هذا البريد الإلكتروني غير مسجل';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
+      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }
