@@ -42,13 +42,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Error fetching profile:', error);
-        // ✅ إذا ما لقينا profile، نستخدم بيانات auth user فقط
+        
+        // ✅ نقرأ من auth.users مباشرة
         const { data: { user: authUser } } = await supabase.auth.getUser();
+        
+        // ✅ نقرأ full_name من user_metadata (Supabase يخزنها هنا تلقائياً)
+        const fullName = authUser?.user_metadata?.full_name 
+          || authUser?.user_metadata?.name 
+          || authUser?.email?.split('@')[0]  // fallback: جزء من الإيميل
+          || 'مستخدم';
         
         setUser({
           id: userId,
           email: authUser?.email || '',
-          full_name: authUser?.user_metadata?.full_name || '',
+          full_name: fullName,
           avatar_url: null,
           role: 'user',
           subscription_type: 'free',
@@ -108,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(error.message || 'خطأ في إنشاء الحساب');
     }
     
+    // ✅ Create profile in database
     if (data.user) {
       const { error: profileError } = await supabase
         .from('profiles')
