@@ -17,6 +17,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (token) {
       const parsed = JSON.parse(token);
+      // ✅ نتحقق من الـ token صالح
       supabase.auth.setSession({
         access_token: parsed.access_token,
         refresh_token: parsed.refresh_token,
@@ -25,36 +26,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(session);
           fetchUserProfile(session.user.id);
         } else {
-          setUser(null);
-          setSession(null);
-          setIsLoading(false);
+          // ❌ Token غير صالح
+          clearAuth();
         }
       });
     } else {
-      setUser(null);
-      setSession(null);
-      setIsLoading(false);
+      // ❌ لا يوجد token
+      clearAuth();
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setUser(null);
-        setIsLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {};
   }, []);
 
-  // ✅ نراقب session ونمسح user لما يكون null
+  // ✅ نراقب تغييرات الصفحة
   useEffect(() => {
-    if (!session) {
-      setUser(null);
-    }
-  }, [session]);
+    const handleStorageChange = () => {
+      const remember = localStorage.getItem('auth_remember');
+      const token = remember === 'true' 
+        ? localStorage.getItem('sb-token')
+        : sessionStorage.getItem('sb-token');
+      
+      if (!token) {
+        clearAuth();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  function clearAuth() {
+    setUser(null);
+    setSession(null);
+    setIsLoading(false);
+    // ✅ نمسح Supabase session من الذاكرة
+    supabase.auth.signOut();
+  }
 
   async function fetchUserProfile(userId: string) {
     try {
