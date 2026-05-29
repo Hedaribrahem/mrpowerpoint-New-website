@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
-import { LogIn, Mail, Lock, Eye, EyeOff, Chrome } from 'lucide-react';
+import { LogIn, Mail, Lock, Eye, EyeOff, Chrome, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { toast } from 'sonner';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,32 +10,43 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); // ✅ رسالة خطأ داخل الصفحة
   const { signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage(''); // ✅ مسح الخطأ القديم
 
     try {
       await signIn(email, password);
-      toast.success('تم تسجيل الدخول بنجاح!');
+      // ✅ نجاح - انتقل للـ Dashboard
       navigate('/dashboard');
     } catch (error: any) {
       // ✅ رسالة خطأ واضحة بالعربي
-      let errorMessage = 'حدث خطأ أثناء تسجيل الدخول';
+      let message = 'حدث خطأ أثناء تسجيل الدخول';
       
-      if (error.message?.includes('Invalid login credentials')) {
-        errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
-      } else if (error.message?.includes('Email not confirmed')) {
-        errorMessage = 'يرجى تأكيد بريدك الإلكتروني أولاً';
-      } else if (error.message?.includes('User not found')) {
-        errorMessage = 'هذا البريد الإلكتروني غير مسجل';
-      } else if (error.message) {
-        errorMessage = error.message;
+      if (error?.message) {
+        const msg = error.message.toLowerCase();
+        
+        if (msg.includes('invalid login credentials')) {
+          message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+        } else if (msg.includes('email not confirmed')) {
+          message = 'يرجى تأكيد بريدك الإلكتروني أولاً';
+        } else if (msg.includes('user not found')) {
+          message = 'هذا البريد الإلكتروني غير مسجل';
+        } else if (msg.includes('invalid email')) {
+          message = 'البريد الإلكتروني غير صالح';
+        } else if (msg.includes('network')) {
+          message = 'مشكلة في الاتصال بالإنترنت';
+        } else {
+          message = error.message;
+        }
       }
       
-      toast.error(errorMessage);
+      // ✅ عرض الخطأ داخل الصفحة
+      setErrorMessage(message);
       console.error('Login error:', error);
     } finally {
       setIsLoading(false);
@@ -47,7 +57,7 @@ export default function LoginPage() {
     try {
       await signInWithGoogle();
     } catch (error: any) {
-      toast.error(error.message || 'خطأ في تسجيل الدخول عبر Google');
+      setErrorMessage(error.message || 'خطأ في تسجيل الدخول عبر Google');
     }
   };
 
@@ -68,6 +78,17 @@ export default function LoginPage() {
               <p className="text-muted-foreground text-sm mt-1">أهلاً بك مجدداً في Mr PowerPoint</p>
             </div>
 
+            {/* ✅ رسالة خطأ داخل الصفحة */}
+            {errorMessage && (
+              <div className="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-red-800">خطأ في تسجيل الدخول</p>
+                  <p className="text-sm text-red-600">{errorMessage}</p>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">البريد الإلكتروني</label>
@@ -76,11 +97,16 @@ export default function LoginPage() {
                   <input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setErrorMessage(''); // ✅ مسح الخطأ لما يكتب
+                    }}
                     placeholder="your@email.com"
                     required
                     disabled={isLoading}
-                    className="w-full pr-10 pl-4 py-3 rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-brand-red/30"
+                    className={`w-full pr-10 pl-4 py-3 rounded-xl border bg-background focus:outline-none focus:ring-2 focus:ring-brand-red/30 ${
+                      errorMessage ? 'border-red-300' : 'border-input'
+                    }`}
                   />
                 </div>
               </div>
@@ -92,11 +118,16 @@ export default function LoginPage() {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setErrorMessage(''); // ✅ مسح الخطأ لما يكتب
+                    }}
                     placeholder="••••••••"
                     required
                     disabled={isLoading}
-                    className="w-full pr-10 pl-12 py-3 rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-brand-red/30"
+                    className={`w-full pr-10 pl-12 py-3 rounded-xl border bg-background focus:outline-none focus:ring-2 focus:ring-brand-red/30 ${
+                      errorMessage ? 'border-red-300' : 'border-input'
+                    }`}
                   />
                   <button
                     type="button"
