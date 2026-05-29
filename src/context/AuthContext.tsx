@@ -32,7 +32,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     }
 
-    return () => {};
+    // ✅ نستمع للتغييرات في auth state
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setUser(null);
+        setIsLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   async function fetchUserProfile(userId: string) {
@@ -101,8 +112,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sessionStorage.setItem('sb-token', token);
       }
       
+      // ✅ نحدث الـ state فوراً
       setSession(data.session);
-      fetchUserProfile(data.session.user.id);
+      await fetchUserProfile(data.session.user.id);
     }
     
     return data;
@@ -155,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     session,
     isLoading,
-    isAuthenticated: !!session && !!user, // ✅ true فقط لما يكون فيه session + user
+    isAuthenticated: !!session && !!user,
     signIn,
     signUp,
     signOut,
