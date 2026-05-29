@@ -10,7 +10,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // ✅ Check active session on mount - customStorage يدير "تذكرني" تلقائياً
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
@@ -20,7 +19,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session?.user) {
@@ -44,6 +42,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Error fetching profile:', error);
+        // ✅ إذا ما لقينا profile، نستخدم بيانات auth user فقط
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        
+        setUser({
+          id: userId,
+          email: authUser?.email || '',
+          full_name: authUser?.user_metadata?.full_name || '',
+          avatar_url: null,
+          role: 'user',
+          subscription_type: 'free',
+        });
         setIsLoading(false);
         return;
       }
@@ -76,7 +85,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(error.message || 'خطأ في تسجيل الدخول');
     }
     
-    // ✅ نحفظ "تذكرني" في localStorage - customStorage يستخدمه تلقائياً
     if (rememberMe) {
       localStorage.setItem('auth_remember', 'true');
     } else {
@@ -100,7 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(error.message || 'خطأ في إنشاء الحساب');
     }
     
-    // Create profile in database
     if (data.user) {
       const { error: profileError } = await supabase
         .from('profiles')
@@ -118,7 +125,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     
-    // ❌ لا تسجل دخول تلقائياً
     setTimeout(() => {
       setUser(null);
       setSession(null);
@@ -136,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     localStorage.removeItem('auth_remember');
-    sessionStorage.clear(); // ✅ نمسح sessionStorage كمان
+    sessionStorage.clear();
   }
 
   async function signInWithGoogle() {
