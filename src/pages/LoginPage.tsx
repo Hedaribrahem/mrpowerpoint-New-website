@@ -145,7 +145,7 @@ export default function LoginPage() {
                   />
                   تذكرني
                 </label>
-                <Link to="#" className="text-brand-red hover:underline">
+                <Link to="/forgot-password" className="text-brand-red hover:underline">
                   نسيت كلمة المرور؟
                 </Link>
               </div>

@@ -29,6 +29,8 @@ const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/RegisterPage'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 const ContactPage = lazy(() => import('@/pages/ContactPage'));
+const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage')); // ✅ جديد
+const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage')); // ✅ جديد
 
 function LoadingFallback() {
   return (
@@ -83,6 +85,8 @@ export default function App() {
                 <Route path="/blog/:slug" element={<BlogPostPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} /> {/* ✅ جديد */}
+                <Route path="/reset-password" element={<ResetPasswordPage />} /> {/* ✅ جديد */}
                 
                 {/* ✅ Protected Routes - يحتاج تسجيل دخول */}
                 <Route path="/dashboard" element={
