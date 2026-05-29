@@ -6,11 +6,13 @@ const AuthContext = createContext<any>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<any>(null);
+  const [session, setSession] = useState<any>(null); // ✅ تتبع الـ session
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check active session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
       if (session?.user) {
         fetchUserProfile(session.user.id);
       } else {
@@ -20,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
       if (session?.user) {
         fetchUserProfile(session.user.id);
       } else {
@@ -70,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(error.message || 'خطأ في تسجيل الدخول');
     }
     
-    // User will be set by onAuthStateChange listener
+    // ✅ Session will be set by onAuthStateChange listener
     return data;
   }
 
@@ -88,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(error.message || 'خطأ في إنشاء الحساب');
     }
     
-    // Create profile in database
+    // ✅ Create profile in database
     if (data.user) {
       const { error: profileError } = await supabase
         .from('profiles')
@@ -106,6 +109,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     
+    // ❌ لا تسجل دخول تلقائياً - المستخدم لازم يسجل دخول يدوياً
+    // نمسح الـ user المؤقت اللي ممكن onAuthStateChange يعينه
+    setTimeout(() => {
+      setUser(null);
+      setSession(null);
+    }, 100);
+    
     return data;
   }
 
@@ -116,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(error.message || 'خطأ في تسجيل الخروج');
     }
     setUser(null);
+    setSession(null);
   }
 
   async function signInWithGoogle() {
@@ -134,7 +145,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = {
     user,
+    session,
     isLoading,
+    isAuthenticated: !!session && !!user, // ✅ true فقط لما يكون فيه session + user
     signIn,
     signUp,
     signOut,

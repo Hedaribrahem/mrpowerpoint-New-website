@@ -35,7 +35,7 @@ export default function Header() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
-  const { user, signOut } = useAuth();
+  const { user, isAuthenticated, signOut } = useAuth(); // ✅ أضفنا isAuthenticated
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -145,12 +145,12 @@ export default function Header() {
                 {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
 
-              {/* ✅ User Section - يتغير حسب حالة تسجيل الدخول */}
-              {user ? (
+              {/* ✅ Desktop User Section - يتغير حسب isAuthenticated */}
+              {isAuthenticated ? (
                 <div className="hidden sm:flex items-center gap-2">
                   <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted">
                     <User className="w-4 h-4 text-brand-red" />
-                    <span className="text-sm font-medium">{user.full_name || user.email}</span>
+                    <span className="text-sm font-medium">{user?.full_name || user?.email}</span>
                   </div>
                   <button
                     onClick={handleSignOut}
@@ -229,13 +229,13 @@ export default function Header() {
                 );
               })}
               
-              {/* ✅ Mobile User Section */}
+              {/* ✅ Mobile User Section - يتغير حسب isAuthenticated */}
               <div className="pt-4 border-t border-border mt-4">
-                {user ? (
+                {isAuthenticated ? (
                   <>
                     <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-muted">
                       <User className="w-5 h-5 text-brand-red" />
-                      <span className="font-medium">{user.full_name || user.email}</span>
+                      <span className="font-medium">{user?.full_name || user?.email}</span>
                     </div>
                     <button
                       onClick={() => {
