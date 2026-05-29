@@ -4,9 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
-// ✅ Supabase client منفصل للـ reset password
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// ✅ Supabase client منفصل تماماً
 const resetSupabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function ResetPasswordPage() {
@@ -16,15 +17,62 @@ export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [isReady, setIsReady] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // ✅ Supabase يتعامل مع الـ hash تلقائياً
-    resetSupabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        setErrorMessage('رابط غير صالح أو منتهي الصلاحية');
+    async function initSession() {
+      try {
+        // ✅ نقرأ الـ hash من الـ URL
+        const hash = window.location.hash;
+        console.log('URL hash:', hash); // للتصحيح
+
+        if (!hash || hash.length < 10) {
+          setErrorMessage('رابط غير صالح أو منتهي الصلاحية');
+          return;
+        }
+
+        // ✅ نحول الـ hash لـ params
+        const params = new URLSearchParams(hash.substring(1));
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        const type = params.get('type');
+
+        console.log('Token:', accessToken ? 'موجود' : 'فاضي');
+        console.log('Type:', type);
+
+        if (!accessToken || type !== 'recovery') {
+          setErrorMessage('رابط غير صالح أو منتهي الصلاحية');
+          return;
+        }
+
+        // ✅ نعين الـ session يدوياً
+        const { data, error } = await resetSupabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || '',
+        });
+
+        if (error) {
+          console.error('setSession error:', error);
+          setErrorMessage('رابط منتهي الصلاحية');
+          return;
+        }
+
+        if (!data.session) {
+          setErrorMessage('رابط غير صالح');
+          return;
+        }
+
+        console.log('Session set successfully!');
+        setIsReady(true);
+
+      } catch (err) {
+        console.error('Init error:', err);
+        setErrorMessage('حدث خطأ غير متوقع');
       }
-    });
+    }
+
+    initSession();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,7 +98,10 @@ export default function ResetPasswordPage() {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('updateUser error:', error);
+        throw error;
+      }
 
       setSuccessMessage('تم تغيير كلمة المرور بنجاح! سيتم تحويلك...');
       setTimeout(() => {
@@ -102,7 +153,7 @@ export default function ResetPasswordPage() {
               </div>
             )}
 
-            {!errorMessage && (
+            {isReady && !errorMessage && !successMessage && (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">كلمة المرور الجديدة</label>
