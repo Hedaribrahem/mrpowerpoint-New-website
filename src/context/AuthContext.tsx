@@ -10,30 +10,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check active session on mount
+    // ✅ Check active session on mount - customStorage يدير "تذكرني" تلقائياً
     supabase.auth.getSession().then(({ data: { session } }) => {
-      const remember = localStorage.getItem('auth_remember');
-      
-      // ✅ إذا ما كان "تذكرني" وSession قديم، نمسحه
-      if (!session) {
-        setIsLoading(false);
-        return;
-      }
-      
-      // ✅ إذا "تذكرني" = false، نتحقق من وقت Session
-      if (remember === 'false') {
-        const expiresAt = session.expires_at;
-        const now = Math.floor(Date.now() / 1000);
-        
-        // Session ينتهي بعد ساعة إذا ما اختار "تذكرني"
-        if (expiresAt && now > expiresAt) {
-          supabase.auth.signOut();
-          localStorage.removeItem('auth_remember');
-          setIsLoading(false);
-          return;
-        }
-      }
-      
       setSession(session);
       if (session?.user) {
         fetchUserProfile(session.user.id);
@@ -87,7 +65,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // ✅ عدلنا signIn عشان يقبل rememberMe
   async function signIn(email: string, password: string, rememberMe: boolean = false) {
     const { data, error } = await supabase.auth.signInWithPassword({ 
       email, 
@@ -99,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(error.message || 'خطأ في تسجيل الدخول');
     }
     
-    // ✅ نحفظ "تذكرني" في localStorage
+    // ✅ نحفظ "تذكرني" في localStorage - customStorage يستخدمه تلقائياً
     if (rememberMe) {
       localStorage.setItem('auth_remember', 'true');
     } else {
@@ -123,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(error.message || 'خطأ في إنشاء الحساب');
     }
     
-    // ✅ Create profile in database
+    // Create profile in database
     if (data.user) {
       const { error: profileError } = await supabase
         .from('profiles')
@@ -158,7 +135,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(null);
     setSession(null);
-    localStorage.removeItem('auth_remember'); // ✅ نمسح "تذكرني"
+    localStorage.removeItem('auth_remember');
+    sessionStorage.clear(); // ✅ نمسح sessionStorage كمان
   }
 
   async function signInWithGoogle() {
