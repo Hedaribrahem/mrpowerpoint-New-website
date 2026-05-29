@@ -11,13 +11,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const remember = localStorage.getItem('auth_remember');
-    const token = remember === 'true' 
+    
+    // ✅ نتحقق من كل أنواع الـ tokens
+    const manualToken = remember === 'true' 
       ? localStorage.getItem('sb-token')
       : sessionStorage.getItem('sb-token');
+    
+    // ✅ نتحقق إذا Supabase خزن token في localStorage بدون إذن
+    const supabaseToken = localStorage.getItem('sb-gkguketffqrigfxphxrt-auth-token');
+    if (supabaseToken && remember === 'false') {
+      // ❌ نمسح token غير مصرح
+      localStorage.removeItem('sb-gkguketffqrigfxphxrt-auth-token');
+    }
 
-    if (token) {
-      const parsed = JSON.parse(token);
-      // ✅ نعيد بناء الـ session يدوياً
+    if (manualToken) {
+      const parsed = JSON.parse(manualToken);
       supabase.auth.setSession({
         access_token: parsed.access_token,
         refresh_token: parsed.refresh_token,
@@ -100,6 +108,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         localStorage.setItem('auth_remember', 'false');
         sessionStorage.setItem('sb-token', token);
+        // ✅ نمسح أي token Supabase خزنه في localStorage
+        setTimeout(() => {
+          localStorage.removeItem('sb-gkguketffqrigfxphxrt-auth-token');
+        }, 50);
       }
       
       setSession(data.session);
@@ -138,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     localStorage.removeItem('auth_remember');
     localStorage.removeItem('sb-token');
+    localStorage.removeItem('sb-gkguketffqrigfxphxrt-auth-token');
     sessionStorage.removeItem('sb-token');
   }
 
