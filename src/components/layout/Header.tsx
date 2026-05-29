@@ -35,7 +35,7 @@ export default function Header() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
-  const { user, isAuthenticated, signOut } = useAuth(); // ✅ أضفنا isAuthenticated
+  const { user, isAuthenticated, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -145,13 +145,16 @@ export default function Header() {
                 {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
 
-              {/* ✅ Desktop User Section - يتحقق من isAuthenticated */}
+              {/* ✅ Desktop User Section - اسم المستخدم رابط للـ Dashboard */}
               {isAuthenticated ? (
                 <div className="hidden sm:flex items-center gap-2">
-                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted">
+                  <Link 
+                    to="/dashboard" 
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+                  >
                     <User className="w-4 h-4 text-brand-red" />
                     <span className="text-sm font-medium">{user?.full_name || user?.email}</span>
-                  </div>
+                  </Link>
                   <button
                     onClick={handleSignOut}
                     className="flex items-center gap-1.5 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
@@ -229,14 +232,17 @@ export default function Header() {
                 );
               })}
               
-              {/* ✅ Mobile User Section - يتحقق من isAuthenticated */}
+              {/* ✅ Mobile User Section - اسم المستخدم رابط للـ Dashboard */}
               <div className="pt-4 border-t border-border mt-4">
                 {isAuthenticated ? (
                   <>
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-muted">
+                    <Link
+                      to="/dashboard"
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl bg-muted hover:bg-muted/80 transition-colors"
+                    >
                       <User className="w-5 h-5 text-brand-red" />
                       <span className="font-medium">{user?.full_name || user?.email}</span>
-                    </div>
+                    </Link>
                     <button
                       onClick={() => {
                         handleSignOut();
