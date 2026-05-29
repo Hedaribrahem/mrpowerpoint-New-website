@@ -10,6 +10,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const remember = localStorage.getItem('auth_remember');
+    
+    // ✅ إذا "تذكرني" = false، نتحقق من sessionStorage فقط
+    if (remember === 'false') {
+      const sessionToken = sessionStorage.getItem('sb-gkguketffqrigfxphxrt-auth-token');
+      if (!sessionToken) {
+        setIsLoading(false);
+        return;
+      }
+    }
+    
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
@@ -46,10 +57,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // ✅ نقرأ من auth.users مباشرة
         const { data: { user: authUser } } = await supabase.auth.getUser();
         
-        // ✅ نقرأ full_name من user_metadata (Supabase يخزنها هنا تلقائياً)
+        // ✅ نقرأ full_name من user_metadata
         const fullName = authUser?.user_metadata?.full_name 
           || authUser?.user_metadata?.name 
-          || authUser?.email?.split('@')[0]  // fallback: جزء من الإيميل
+          || authUser?.email?.split('@')[0]
           || 'مستخدم';
         
         setUser({
@@ -94,8 +105,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     if (rememberMe) {
       localStorage.setItem('auth_remember', 'true');
+      // ✅ نتأكد إن الـ token في localStorage
+      const token = sessionStorage.getItem('sb-gkguketffqrigfxphxrt-auth-token');
+      if (token) {
+        localStorage.setItem('sb-gkguketffqrigfxphxrt-auth-token', token);
+        sessionStorage.removeItem('sb-gkguketffqrigfxphxrt-auth-token');
+      }
     } else {
       localStorage.setItem('auth_remember', 'false');
+      // ✅ ننقل الـ token من localStorage إلى sessionStorage
+      const token = localStorage.getItem('sb-gkguketffqrigfxphxrt-auth-token');
+      if (token) {
+        sessionStorage.setItem('sb-gkguketffqrigfxphxrt-auth-token', token);
+        localStorage.removeItem('sb-gkguketffqrigfxphxrt-auth-token');
+      }
     }
     
     return data;
@@ -151,6 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     localStorage.removeItem('auth_remember');
     sessionStorage.clear();
+    localStorage.removeItem('sb-gkguketffqrigfxphxrt-auth-token');
   }
 
   async function signInWithGoogle() {
