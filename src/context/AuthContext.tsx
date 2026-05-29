@@ -25,14 +25,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(session);
           fetchUserProfile(session.user.id);
         } else {
+          setUser(null);
+          setSession(null);
           setIsLoading(false);
         }
       });
     } else {
+      setUser(null);
+      setSession(null);
       setIsLoading(false);
     }
 
-    // ✅ نستمع للتغييرات في auth state
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session?.user) {
@@ -45,6 +48,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // ✅ نراقب session ونمسح user لما يكون null
+  useEffect(() => {
+    if (!session) {
+      setUser(null);
+    }
+  }, [session]);
 
   async function fetchUserProfile(userId: string) {
     try {
@@ -112,7 +122,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sessionStorage.setItem('sb-token', token);
       }
       
-      // ✅ نحدث الـ state فوراً
       setSession(data.session);
       await fetchUserProfile(data.session.user.id);
     }
