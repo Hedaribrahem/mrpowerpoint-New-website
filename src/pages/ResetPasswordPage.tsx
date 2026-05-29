@@ -2,7 +2,12 @@ import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+// ✅ Supabase client منفصل للـ reset password
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const resetSupabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
@@ -14,29 +19,12 @@ export default function ResetPasswordPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // ✅ نتحقق من الـ hash في الرابط
-    const hash = window.location.hash;
-    if (!hash || !hash.includes('access_token')) {
-      setErrorMessage('رابط غير صالح أو منتهي الصلاحية');
-      return;
-    }
-
-    // ✅ نستخرج الـ access_token من الـ hash
-    const params = new URLSearchParams(hash.replace('#', ''));
-    const accessToken = params.get('access_token');
-    const refreshToken = params.get('refresh_token');
-
-    if (accessToken) {
-      // ✅ نعين الـ session مباشرة من الـ token
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken || '',
-      }).then(({ error }) => {
-        if (error) {
-          setErrorMessage('رابط غير صالح أو منتهي الصلاحية');
-        }
-      });
-    }
+    // ✅ Supabase يتعامل مع الـ hash تلقائياً
+    resetSupabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        setErrorMessage('رابط غير صالح أو منتهي الصلاحية');
+      }
+    });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,7 +46,7 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await resetSupabase.auth.updateUser({
         password,
       });
 
@@ -94,7 +82,6 @@ export default function ResetPasswordPage() {
               </p>
             </div>
 
-            {/* ✅ رسالة نجاح */}
             {successMessage && (
               <div className="mb-4 p-4 rounded-xl bg-green-50 border border-green-200 flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
@@ -105,7 +92,6 @@ export default function ResetPasswordPage() {
               </div>
             )}
 
-            {/* ❌ رسالة خطأ */}
             {errorMessage && (
               <div className="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
@@ -116,7 +102,7 @@ export default function ResetPasswordPage() {
               </div>
             )}
 
-            {!errorMessage.includes('غير صالح') && (
+            {!errorMessage && (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">كلمة المرور الجديدة</label>
