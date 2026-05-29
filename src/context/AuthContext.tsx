@@ -10,17 +10,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const remember = localStorage.getItem('auth_remember');
-    
-    // ✅ إذا "تذكرني" = false، نتحقق من sessionStorage فقط
-    if (remember === 'false') {
-      const sessionToken = sessionStorage.getItem('sb-gkguketffqrigfxphxrt-auth-token');
-      if (!sessionToken) {
-        setIsLoading(false);
-        return;
-      }
-    }
-    
+    // ✅ customStorage يدير "تذكرني" تلقائياً
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
@@ -103,22 +93,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(error.message || 'خطأ في تسجيل الدخول');
     }
     
+    // ✅ نحفظ "تذكرني" في localStorage - customStorage يستخدمه تلقائياً
     if (rememberMe) {
       localStorage.setItem('auth_remember', 'true');
-      // ✅ نتأكد إن الـ token في localStorage
-      const token = sessionStorage.getItem('sb-gkguketffqrigfxphxrt-auth-token');
-      if (token) {
-        localStorage.setItem('sb-gkguketffqrigfxphxrt-auth-token', token);
-        sessionStorage.removeItem('sb-gkguketffqrigfxphxrt-auth-token');
-      }
     } else {
       localStorage.setItem('auth_remember', 'false');
-      // ✅ ننقل الـ token من localStorage إلى sessionStorage
-      const token = localStorage.getItem('sb-gkguketffqrigfxphxrt-auth-token');
-      if (token) {
-        sessionStorage.setItem('sb-gkguketffqrigfxphxrt-auth-token', token);
-        localStorage.removeItem('sb-gkguketffqrigfxphxrt-auth-token');
-      }
     }
     
     return data;
@@ -156,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     
+    // ❌ لا تسجل دخول تلقائياً
     setTimeout(() => {
       setUser(null);
       setSession(null);
