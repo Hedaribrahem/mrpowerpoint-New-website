@@ -5,6 +5,12 @@ import { AuthProvider } from '@/context/AuthContext'
 import './index.css'
 import App from './App.tsx'
 
+// ✅ نحفظ الـ hash قبل React Router يمسحه
+const savedHash = window.location.hash;
+if (savedHash && savedHash.includes('access_token')) {
+  sessionStorage.setItem('supabase_auth_hash', savedHash);
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
