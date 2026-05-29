@@ -12,16 +12,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const remember = localStorage.getItem('auth_remember');
     
-    // ✅ نتحقق من كل أنواع الـ tokens
+    // ✅ نتحقق من كل الـ tokens
     const manualToken = remember === 'true' 
       ? localStorage.getItem('sb-token')
       : sessionStorage.getItem('sb-token');
-    
-    // ✅ نتحقق إذا Supabase خزن token في localStorage بدون إذن
-    const supabaseToken = localStorage.getItem('sb-gkguketffqrigfxphxrt-auth-token');
-    if (supabaseToken && remember === 'false') {
-      // ❌ نمسح token غير مصرح
-      localStorage.removeItem('sb-gkguketffqrigfxphxrt-auth-token');
+
+    // ✅ نمسح أي token Supabase خزنه في localStorage
+    if (remember === 'false') {
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith('sb-') && key.includes('auth-token')) {
+          localStorage.removeItem(key);
+        }
+      });
     }
 
     if (manualToken) {
@@ -110,8 +113,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sessionStorage.setItem('sb-token', token);
         // ✅ نمسح أي token Supabase خزنه في localStorage
         setTimeout(() => {
-          localStorage.removeItem('sb-gkguketffqrigfxphxrt-auth-token');
-        }, 50);
+          const keys = Object.keys(localStorage);
+          keys.forEach(key => {
+            if (key.startsWith('sb-') && key.includes('auth-token')) {
+              localStorage.removeItem(key);
+            }
+          });
+        }, 100);
       }
       
       setSession(data.session);
@@ -150,8 +158,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     localStorage.removeItem('auth_remember');
     localStorage.removeItem('sb-token');
-    localStorage.removeItem('sb-gkguketffqrigfxphxrt-auth-token');
     sessionStorage.removeItem('sb-token');
+    // ✅ نمسح كل tokens
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith('sb-') && key.includes('auth-token')) {
+        localStorage.removeItem(key);
+      }
+    });
   }
 
   async function signInWithGoogle() {
