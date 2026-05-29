@@ -10,21 +10,19 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(''); // ✅ رسالة خطأ داخل الصفحة
+  const [errorMessage, setErrorMessage] = useState('');
   const { signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setErrorMessage(''); // ✅ مسح الخطأ القديم
+    setErrorMessage('');
 
     try {
-      await signIn(email, password);
-      // ✅ نجاح - انتقل للـ Dashboard
+      await signIn(email, password, remember); // ✅ أضفنا remember هنا
       navigate('/dashboard');
     } catch (error: any) {
-      // ✅ رسالة خطأ واضحة بالعربي
       let message = 'حدث خطأ أثناء تسجيل الدخول';
       
       if (error?.message) {
@@ -45,7 +43,6 @@ export default function LoginPage() {
         }
       }
       
-      // ✅ عرض الخطأ داخل الصفحة
       setErrorMessage(message);
       console.error('Login error:', error);
     } finally {
@@ -78,7 +75,6 @@ export default function LoginPage() {
               <p className="text-muted-foreground text-sm mt-1">أهلاً بك مجدداً في Mr PowerPoint</p>
             </div>
 
-            {/* ✅ رسالة خطأ داخل الصفحة */}
             {errorMessage && (
               <div className="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
@@ -99,7 +95,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
-                      setErrorMessage(''); // ✅ مسح الخطأ لما يكتب
+                      setErrorMessage('');
                     }}
                     placeholder="your@email.com"
                     required
@@ -120,7 +116,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
-                      setErrorMessage(''); // ✅ مسح الخطأ لما يكتب
+                      setErrorMessage('');
                     }}
                     placeholder="••••••••"
                     required

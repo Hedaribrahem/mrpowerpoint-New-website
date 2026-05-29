@@ -6,12 +6,34 @@ const AuthContext = createContext<any>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<any>(null);
-  const [session, setSession] = useState<any>(null); // ✅ تتبع الـ session
+  const [session, setSession] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check active session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
+      const remember = localStorage.getItem('auth_remember');
+      
+      // ✅ إذا ما كان "تذكرني" وSession قديم، نمسحه
+      if (!session) {
+        setIsLoading(false);
+        return;
+      }
+      
+      // ✅ إذا "تذكرني" = false، نتحقق من وقت Session
+      if (remember === 'false') {
+        const expiresAt = session.expires_at;
+        const now = Math.floor(Date.now() / 1000);
+        
+        // Session ينتهي بعد ساعة إذا ما اختار "تذكرني"
+        if (expiresAt && now > expiresAt) {
+          supabase.auth.signOut();
+          localStorage.removeItem('auth_remember');
+          setIsLoading(false);
+          return;
+        }
+      }
+      
       setSession(session);
       if (session?.user) {
         fetchUserProfile(session.user.id);
@@ -65,15 +87,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function signIn(email: string, password: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  // ✅ عدلنا signIn عشان يقبل rememberMe
+  async function signIn(email: string, password: string, rememberMe: boolean = false) {
+    const { data, error } = await supabase.auth.signInWithPassword({ 
+      email, 
+      password,
+    });
     
     if (error) {
       console.error('Sign in error:', error);
       throw new Error(error.message || 'خطأ في تسجيل الدخول');
     }
     
-    // ✅ Session will be set by onAuthStateChange listener
+    // ✅ نحفظ "تذكرني" في localStorage
+    if (rememberMe) {
+      localStorage.setItem('auth_remember', 'true');
+    } else {
+      localStorage.setItem('auth_remember', 'false');
+    }
+    
     return data;
   }
 
@@ -109,8 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     
-    // ❌ لا تسجل دخول تلقائياً - المستخدم لازم يسجل دخول يدوياً
-    // نمسح الـ user المؤقت اللي ممكن onAuthStateChange يعينه
+    // ❌ لا تسجل دخول تلقائياً
     setTimeout(() => {
       setUser(null);
       setSession(null);
@@ -127,6 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(null);
     setSession(null);
+    localStorage.removeItem('auth_remember'); // ✅ نمسح "تذكرني"
   }
 
   async function signInWithGoogle() {
@@ -147,7 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     session,
     isLoading,
-    isAuthenticated: !!session && !!user, // ✅ true فقط لما يكون فيه session + user
+    isAuthenticated: !!session && !!user,
     signIn,
     signUp,
     signOut,
