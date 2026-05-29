@@ -11,24 +11,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const remember = localStorage.getItem('auth_remember');
-    
-    // ✅ نتحقق من كل الـ tokens
-    const manualToken = remember === 'true' 
+    const token = remember === 'true' 
       ? localStorage.getItem('sb-token')
       : sessionStorage.getItem('sb-token');
 
-    // ✅ نمسح أي token Supabase خزنه في localStorage
-    if (remember === 'false') {
-      const keys = Object.keys(localStorage);
-      keys.forEach(key => {
-        if (key.startsWith('sb-') && key.includes('auth-token')) {
-          localStorage.removeItem(key);
-        }
-      });
-    }
-
-    if (manualToken) {
-      const parsed = JSON.parse(manualToken);
+    if (token) {
+      const parsed = JSON.parse(token);
       supabase.auth.setSession({
         access_token: parsed.access_token,
         refresh_token: parsed.refresh_token,
@@ -111,15 +99,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         localStorage.setItem('auth_remember', 'false');
         sessionStorage.setItem('sb-token', token);
-        // ✅ نمسح أي token Supabase خزنه في localStorage
-        setTimeout(() => {
-          const keys = Object.keys(localStorage);
-          keys.forEach(key => {
-            if (key.startsWith('sb-') && key.includes('auth-token')) {
-              localStorage.removeItem(key);
-            }
-          });
-        }, 100);
       }
       
       setSession(data.session);
@@ -159,13 +138,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('auth_remember');
     localStorage.removeItem('sb-token');
     sessionStorage.removeItem('sb-token');
-    // ✅ نمسح كل tokens
-    const keys = Object.keys(localStorage);
-    keys.forEach(key => {
-      if (key.startsWith('sb-') && key.includes('auth-token')) {
-        localStorage.removeItem(key);
-      }
-    });
   }
 
   async function signInWithGoogle() {
@@ -183,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     session,
     isLoading,
-    isAuthenticated: !!session && !!user,
+    isAuthenticated: !!session && !!user, // ✅ true فقط لما يكون فيه session + user
     signIn,
     signUp,
     signOut,
