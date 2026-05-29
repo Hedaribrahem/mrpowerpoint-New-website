@@ -20,73 +20,27 @@ export default function ResetPasswordPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function initSession() {
-      try {
-        // ✅ نقرأ الـ hash من sessionStorage (محفوظ من main.tsx)
-        let hash = window.location.hash;
-        
-        // إذا فاضي، نجرب sessionStorage
-        if (!hash || hash.length < 10) {
-          hash = sessionStorage.getItem('supabase_auth_hash') || '';
+    // ✅ نستمع للـ auth state changes
+    const { data: { subscription } } = resetSupabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth event:', event);
+      console.log('Session:', session ? 'exists' : 'null');
+
+      if (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') {
+        if (session) {
+          console.log('✅ Recovery session detected!');
+          setIsReady(true);
         }
-
-        console.log('Hash found:', hash ? 'YES' : 'NO');
-        console.log('Hash length:', hash.length);
-
-        if (!hash || hash.length < 10) {
-          setErrorMessage('رابط غير صالح أو منتهي الصلاحية');
-          return;
-        }
-
-        // ✅ نحول الـ hash لـ params
-        const params = new URLSearchParams(hash.substring(1));
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-        const type = params.get('type');
-
-        console.log('access_token exists:', !!accessToken);
-        console.log('type:', type);
-
-        if (!accessToken) {
-          setErrorMessage('رابط غير صالح - لا يوجد token');
-          return;
-        }
-
-        if (type !== 'recovery') {
-          setErrorMessage('رابط غير صالح - type غير صحيح');
-          return;
-        }
-
-        // ✅ نعين الـ session
-        const { data, error } = await resetSupabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || '',
-        });
-
-        if (error) {
-          console.error('setSession error:', error.message);
-          setErrorMessage('رابط منتهي الصلاحية - ' + error.message);
-          return;
-        }
-
-        if (!data.session) {
-          setErrorMessage('فشل في إنشاء الجلسة');
-          return;
-        }
-
-        console.log('✅ Session created successfully!');
-        setIsReady(true);
-
-        // ✅ نمسح الـ hash من sessionStorage
-        sessionStorage.removeItem('supabase_auth_hash');
-
-      } catch (err) {
-        console.error('Init error:', err);
-        setErrorMessage('حدث خطأ غير متوقع');
       }
+    });
+
+    // ✅ نتحقق من الـ hash
+    const hash = sessionStorage.getItem('supabase_auth_hash') || window.location.hash;
+    
+    if (!hash || !hash.includes('access_token')) {
+      setErrorMessage('رابط غير صالح أو منتهي الصلاحية');
     }
 
-    initSession();
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
