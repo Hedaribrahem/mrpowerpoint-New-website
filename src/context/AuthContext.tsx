@@ -11,18 +11,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const remember = localStorage.getItem('auth_remember');
-    
-    // ✅ إذا "تذكرني" = false، نتحقق من sessionStorage فقط
-    if (remember === 'false') {
-      const sessionToken = sessionStorage.getItem('sb-gkguketffqrigfxphxrt-auth-token');
-      if (!sessionToken) {
-        setIsLoading(false);
-        return;
-      }
-      // ✅ نستخدم الـ token من sessionStorage
+    const token = remember === 'true' 
+      ? localStorage.getItem('sb-token')
+      : sessionStorage.getItem('sb-token');
+
+    if (token) {
+      // ✅ نعيد بناء الـ session من الـ token
+      const parsed = JSON.parse(token);
       supabase.auth.setSession({
-        access_token: JSON.parse(sessionToken).access_token,
-        refresh_token: JSON.parse(sessionToken).refresh_token,
+        access_token: parsed.access_token,
+        refresh_token: parsed.refresh_token,
       }).then(({ data: { session } }) => {
         setSession(session);
         if (session?.user) {
@@ -31,18 +29,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsLoading(false);
         }
       });
-      return;
+    } else {
+      setIsLoading(false);
     }
-    
-    // ✅ إذا "تذكرني" = true أو null، نستخدم localStorage (Supabase default)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setIsLoading(false);
-      }
-    });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
@@ -66,12 +55,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
-        
         const { data: { user: authUser } } = await supabase.auth.getUser();
-        
         const fullName = authUser?.user_metadata?.full_name 
-          || authUser?.user_metadata?.name 
           || authUser?.email?.split('@')[0]
           || 'مستخدم';
         
@@ -110,21 +95,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
     });
     
-    if (error) {
-      console.error('Sign in error:', error);
-      throw new Error(error.message || 'خطأ في تسجيل الدخول');
-    }
+    if (error) throw error;
     
-    if (rememberMe) {
-      localStorage.setItem('auth_remember', 'true');
-      // ✅ نخلي token في localStorage (Supabase default)
-    } else {
-      localStorage.setItem('auth_remember', 'false');
-      // ✅ ننقل token من localStorage إلى sessionStorage
-      const token = localStorage.getItem('sb-gkguketffqrigfxphxrt-auth-token');
-      if (token) {
-        sessionStorage.setItem('sb-gkguketffqrigfxphxrt-auth-token', token);
-        localStorage.removeItem('sb-gkguketffqrigfxphxrt-auth-token');
+    if (data.session) {
+      const token = JSON.stringify({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
+      
+      if (rememberMe) {
+        localStorage.setItem('auth_remember', 'true');
+        localStorage.setItem('sb-token', token);
+      } else {
+        localStorage.setItem('auth_remember', 'false');
+        sessionStorage.setItem('sb-token', token);
       }
     }
     
@@ -140,26 +124,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     
-    if (error) {
-      console.error('Sign up error:', error);
-      throw new Error(error.message || 'خطأ في إنشاء الحساب');
-    }
+    if (error) throw error;
     
     if (data.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            id: data.user.id,
-            full_name: fullName,
-            role: 'user',
-            subscription_type: 'free',
-          },
-        ]);
-      
-      if (profileError) {
-        console.error('Profile creation error:', profileError);
-      }
+      await supabase.from('profiles').insert([
+        { id: data.user.id, full_name: fullName, role: 'user', subscription_type: 'free' },
+      ]);
     }
     
     setTimeout(() => {
@@ -171,16 +141,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Sign out error:', error);
-      throw new Error(error.message || 'خطأ في تسجيل الخروج');
-    }
+    await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     localStorage.removeItem('auth_remember');
-    sessionStorage.clear();
-    localStorage.removeItem('sb-gkguketffqrigfxphxrt-auth-token');
+    localStorage.removeItem('sb-token');
+    sessionStorage.removeItem('sb-token');
   }
 
   async function signInWithGoogle() {
@@ -191,10 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     
-    if (error) {
-      console.error('Google sign in error:', error);
-      throw new Error(error.message || 'خطأ في تسجيل الدخول عبر Google');
-    }
+    if (error) throw error;
   }
 
   const value = {
