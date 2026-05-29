@@ -10,7 +10,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // ✅ customStorage يدير "تذكرني" تلقائياً
+    const remember = localStorage.getItem('auth_remember');
+    
+    // ✅ إذا "تذكرني" = false، نتحقق من sessionStorage فقط
+    if (remember === 'false') {
+      const sessionToken = sessionStorage.getItem('sb-gkguketffqrigfxphxrt-auth-token');
+      if (!sessionToken) {
+        setIsLoading(false);
+        return;
+      }
+      // ✅ نستخدم الـ token من sessionStorage
+      supabase.auth.setSession({
+        access_token: JSON.parse(sessionToken).access_token,
+        refresh_token: JSON.parse(sessionToken).refresh_token,
+      }).then(({ data: { session } }) => {
+        setSession(session);
+        if (session?.user) {
+          fetchUserProfile(session.user.id);
+        } else {
+          setIsLoading(false);
+        }
+      });
+      return;
+    }
+    
+    // ✅ إذا "تذكرني" = true أو null، نستخدم localStorage (Supabase default)
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
@@ -44,10 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error('Error fetching profile:', error);
         
-        // ✅ نقرأ من auth.users مباشرة
         const { data: { user: authUser } } = await supabase.auth.getUser();
         
-        // ✅ نقرأ full_name من user_metadata
         const fullName = authUser?.user_metadata?.full_name 
           || authUser?.user_metadata?.name 
           || authUser?.email?.split('@')[0]
@@ -93,11 +115,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(error.message || 'خطأ في تسجيل الدخول');
     }
     
-    // ✅ نحفظ "تذكرني" في localStorage - customStorage يستخدمه تلقائياً
     if (rememberMe) {
       localStorage.setItem('auth_remember', 'true');
+      // ✅ نخلي token في localStorage (Supabase default)
     } else {
       localStorage.setItem('auth_remember', 'false');
+      // ✅ ننقل token من localStorage إلى sessionStorage
+      const token = localStorage.getItem('sb-gkguketffqrigfxphxrt-auth-token');
+      if (token) {
+        sessionStorage.setItem('sb-gkguketffqrigfxphxrt-auth-token', token);
+        localStorage.removeItem('sb-gkguketffqrigfxphxrt-auth-token');
+      }
     }
     
     return data;
@@ -117,7 +145,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(error.message || 'خطأ في إنشاء الحساب');
     }
     
-    // ✅ Create profile in database
     if (data.user) {
       const { error: profileError } = await supabase
         .from('profiles')
@@ -135,7 +162,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     
-    // ❌ لا تسجل دخول تلقائياً
     setTimeout(() => {
       setUser(null);
       setSession(null);
