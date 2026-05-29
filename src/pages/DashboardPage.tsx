@@ -13,7 +13,6 @@ import {
   Crown,
   ChevronLeft,
   LogOut,
-  User,
 } from 'lucide-react';
 
 const menuItems = [
