@@ -16,14 +16,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       : sessionStorage.getItem('sb-token');
 
     if (token) {
-      // ✅ نعيد بناء الـ session من الـ token
       const parsed = JSON.parse(token);
+      // ✅ نعيد بناء الـ session يدوياً
       supabase.auth.setSession({
         access_token: parsed.access_token,
         refresh_token: parsed.refresh_token,
       }).then(({ data: { session } }) => {
-        setSession(session);
-        if (session?.user) {
+        if (session) {
+          setSession(session);
           fetchUserProfile(session.user.id);
         } else {
           setIsLoading(false);
@@ -33,17 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setUser(null);
-        setIsLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {};
   }, []);
 
   async function fetchUserProfile(userId: string) {
@@ -101,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = JSON.stringify({
         access_token: data.session.access_token,
         refresh_token: data.session.refresh_token,
+        expires_at: data.session.expires_at,
       });
       
       if (rememberMe) {
@@ -110,6 +101,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('auth_remember', 'false');
         sessionStorage.setItem('sb-token', token);
       }
+      
+      setSession(data.session);
+      fetchUserProfile(data.session.user.id);
     }
     
     return data;
@@ -132,10 +126,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ]);
     }
     
-    setTimeout(() => {
-      setUser(null);
-      setSession(null);
-    }, 100);
+    setUser(null);
+    setSession(null);
     
     return data;
   }
