@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 import {
   Search,
   Moon,
@@ -15,6 +16,8 @@ import {
   Star,
   Sparkles,
   LogIn,
+  LogOut,
+  User,
 } from 'lucide-react';
 
 const navLinks = [
@@ -32,6 +35,8 @@ export default function Header() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
@@ -47,6 +52,15 @@ export default function Header() {
   const isActive = (href: string) => {
     if (href === '/') return location.pathname === '/';
     return location.pathname.startsWith(href);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
   };
 
   return (
@@ -131,14 +145,29 @@ export default function Header() {
                 {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
 
-              {/* Login */}
-              <Link
-                to="/login"
-                className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-brand-red hover:bg-brand-red-dark rounded-lg transition-colors"
-              >
-                <LogIn className="w-4 h-4" />
-                دخول
-              </Link>
+              {/* ✅ User Section - يتغير حسب حالة تسجيل الدخول */}
+              {user ? (
+                <div className="hidden sm:flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted">
+                    <User className="w-4 h-4 text-brand-red" />
+                    <span className="text-sm font-medium">{user.full_name || user.email}</span>
+                  </div>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-brand-red hover:bg-brand-red-dark rounded-lg transition-colors"
+                >
+                  <LogIn className="w-4 h-4" />
+                  دخول
+                </Link>
+              )}
 
               {/* Mobile Menu Toggle */}
               <button
@@ -199,14 +228,36 @@ export default function Header() {
                   </Link>
                 );
               })}
+              
+              {/* ✅ Mobile User Section */}
               <div className="pt-4 border-t border-border mt-4">
-                <Link
-                  to="/login"
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-brand-red bg-brand-red-transparent font-medium"
-                >
-                  <LogIn className="w-5 h-5" />
-                  تسجيل الدخول
-                </Link>
+                {user ? (
+                  <>
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-muted">
+                      <User className="w-5 h-5 text-brand-red" />
+                      <span className="font-medium">{user.full_name || user.email}</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        handleSignOut();
+                        setIsMobileOpen(false);
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500/10 w-full mt-1"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      تسجيل الخروج
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    to="/login"
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-brand-red bg-brand-red-transparent font-medium"
+                    onClick={() => setIsMobileOpen(false)}
+                  >
+                    <LogIn className="w-5 h-5" />
+                    تسجيل الدخول
+                  </Link>
+                )}
               </div>
             </nav>
           </div>

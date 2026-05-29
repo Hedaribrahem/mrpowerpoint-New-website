@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import {
   Download,
   Heart,
@@ -11,6 +13,7 @@ import {
   Crown,
   ChevronLeft,
   LogOut,
+  User,
 } from 'lucide-react';
 
 const menuItems = [
@@ -26,6 +29,29 @@ const menuItems = [
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('downloads');
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
+
+  // ✅ أول حرف من اسم المستخدم
+  const getInitial = () => {
+    if (user?.full_name) return user.full_name.charAt(0);
+    if (user?.email) return user.email.charAt(0);
+    return 'م';
+  };
+
+  // ✅ اسم العرض
+  const getDisplayName = () => {
+    return user?.full_name || user?.email || 'مستخدم';
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -64,7 +90,7 @@ export default function DashboardPage() {
               <div className="flex items-center gap-3 mb-4">
                 <Crown className="w-8 h-8 text-yellow-500" />
                 <div>
-                  <h3 className="font-bold">الباقة الحالية: VIP</h3>
+                  <h3 className="font-bold">الباقة الحالية: {user?.subscription_type || 'VIP'}</h3>
                   <p className="text-sm text-muted-foreground">تنتهي في: 2026-05-28</p>
                 </div>
               </div>
@@ -122,14 +148,14 @@ export default function DashboardPage() {
             {/* Sidebar */}
             <div className="lg:w-72 shrink-0">
               <div className="glass-card rounded-2xl p-4 sticky top-24">
-                {/* User Info */}
+                {/* ✅ User Info - حقيقي من useAuth */}
                 <div className="flex items-center gap-3 p-3 mb-4 border-b border-border">
                   <div className="w-12 h-12 rounded-full bg-brand-red/20 flex items-center justify-center text-brand-red font-bold">
-                    م
+                    {getInitial()}
                   </div>
                   <div>
-                    <h3 className="font-bold">محمد العلي</h3>
-                    <p className="text-xs text-muted-foreground">VIP Member</p>
+                    <h3 className="font-bold">{getDisplayName()}</h3>
+                    <p className="text-xs text-muted-foreground">{user?.role || 'VIP Member'}</p>
                   </div>
                 </div>
 
@@ -155,8 +181,11 @@ export default function DashboardPage() {
                   })}
                 </nav>
 
-                {/* Logout */}
-                <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-500 hover:bg-red-500/10 transition-colors mt-4">
+                {/* ✅ Logout - شغال الآن */}
+                <button 
+                  onClick={handleSignOut}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-500 hover:bg-red-500/10 transition-colors mt-4"
+                >
                   <LogOut className="w-4 h-4" />
                   تسجيل الخروج
                 </button>
