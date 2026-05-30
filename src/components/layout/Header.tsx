@@ -30,9 +30,6 @@ const navLinks = [
   { name: 'المنتدى', href: '/community', icon: MessageCircle },
 ];
 
-// ✅ الصفحات اللي فيها hero section (الهيدر يكون شفاف)
-const heroPages = ['/', '/templates', '/pricing', '/academy', '/store', '/services', '/community'];
-
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -52,9 +49,6 @@ export default function Header() {
     setIsMobileOpen(false);
   }, [location.pathname]);
 
-  // ✅ نتحقق إذا الصفحة الحالية فيها hero
-  const isHeroPage = heroPages.includes(location.pathname);
-
   const isActive = (href: string) => {
     if (href === '/') return location.pathname === '/';
     return location.pathname.startsWith(href);
@@ -73,7 +67,7 @@ export default function Header() {
     <>
       <header
         className={`fixed top-0 right-0 left-0 z-50 transition-all duration-300 ${
-          isScrolled || !isHeroPage
+          isScrolled
             ? 'glass-nav shadow-lg'
             : 'bg-transparent backdrop-blur-none'
         }`}
