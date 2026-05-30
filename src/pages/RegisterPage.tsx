@@ -28,7 +28,13 @@ export default function RegisterPage() {
       toast.error('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
       return;
     }
-
+      // ✅ التحقق من أحرف وأرقام
+      const hasLetters = /[a-zA-Z]/.test(password);
+      const hasNumbers = /\d/.test(password);
+      if (!hasLetters || !hasNumbers) {
+        toast.error('كلمة المرور يجب أن تحتوي على أحرف وأرقام');
+        return;
+    }    
     setIsLoading(true);
 
     try {

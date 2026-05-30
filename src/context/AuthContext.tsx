@@ -66,12 +66,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', userId)
         .single();
 
+      // ✅ نقرأ من auth.users مباشرة
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
+      // ✅ نقرأ full_name من user_metadata (Supabase يخزنها هنا)
+      const fullName = authUser?.user_metadata?.full_name 
+        || authUser?.user_metadata?.name 
+        || authUser?.email?.split('@')[0]
+        || 'مستخدم';
+
       if (error) {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        const fullName = authUser?.user_metadata?.full_name 
-          || authUser?.email?.split('@')[0]
-          || 'مستخدم';
-        
         setUser({
           id: userId,
           email: authUser?.email || '',
@@ -84,12 +88,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      
       setUser({
         id: userId,
         email: authUser?.email || '',
-        full_name: data?.full_name,
+        full_name: data?.full_name || fullName,
         avatar_url: data?.avatar_url,
         role: data?.role || 'user',
         subscription_type: data?.subscription_type || 'free',
