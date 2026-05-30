@@ -2,7 +2,13 @@ import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase'; // ✅ نستخدم نفس الـ client
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// ✅ Supabase client منفصل تماماً
+const resetSupabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
@@ -15,43 +21,56 @@ export default function ResetPasswordPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // ✅ نتحقق من الـ session مباشرة
-    // Supabase يكتشف الـ hash تلقائياً مع detectSessionInUrl (افتراضي)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Session from getSession:', session ? 'EXISTS' : 'NULL');
-      
-      if (session) {
-        setIsReady(true);
-      } else {
-        // ✅ نجرب نستخرج الـ token من الـ hash يدوياً
-        const hash = window.location.hash || sessionStorage.getItem('supabase_auth_hash') || '';
+    async function initSession() {
+      try {
+        // ✅ نقرأ الـ hash من sessionStorage
+        const hash = sessionStorage.getItem('supabase_recovery_hash');
         
-        if (hash && hash.includes('access_token')) {
-          const params = new URLSearchParams(hash.substring(1));
-          const accessToken = params.get('access_token');
-          const refreshToken = params.get('refresh_token');
-          
-          if (accessToken) {
-            // ✅ نعين الـ session
-            supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken || '',
-            }).then(({ data, error }) => {
-              if (error) {
-                console.error('setSession error:', error.message);
-                setErrorMessage('رابط منتهي الصلاحية');
-              } else if (data.session) {
-                console.log('✅ Session set manually!');
-                setIsReady(true);
-              }
-            });
-            return;
-          }
+        if (!hash || !hash.includes('access_token')) {
+          setErrorMessage('رابط غير صالح أو منتهي الصلاحية');
+          return;
         }
-        
-        setErrorMessage('رابط غير صالح أو منتهي الصلاحية');
+
+        // ✅ نحول الـ hash لـ params
+        const params = new URLSearchParams(hash.substring(1));
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+
+        if (!accessToken) {
+          setErrorMessage('رابط غير صالح');
+          return;
+        }
+
+        // ✅ نعين الـ session
+        const { data, error } = await resetSupabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || '',
+        });
+
+        if (error) {
+          console.error('setSession error:', error.message);
+          setErrorMessage('رابط منتهي الصلاحية');
+          return;
+        }
+
+        if (!data.session) {
+          setErrorMessage('فشل في إنشاء الجلسة');
+          return;
+        }
+
+        console.log('✅ Session created!');
+        setIsReady(true);
+
+        // ✅ نمسح الـ hash
+        sessionStorage.removeItem('supabase_recovery_hash');
+
+      } catch (err) {
+        console.error('Init error:', err);
+        setErrorMessage('حدث خطأ غير متوقع');
       }
-    });
+    }
+
+    initSession();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,30 +92,17 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      // ✅ نتحقق من الـ session قبل التحديث
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        setErrorMessage('الجلسة منتهية، يرجى طلب رابط جديد');
-        setIsLoading(false);
-        return;
-      }
-
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await resetSupabase.auth.updateUser({
         password,
       });
 
       if (error) throw error;
 
-      // ✅ نمسح الـ session بعد التغيير
-      await supabase.auth.signOut();
-      
       setSuccessMessage('تم تغيير كلمة المرور بنجاح! سيتم تحويلك...');
       setTimeout(() => {
         navigate('/login');
       }, 3000);
     } catch (error: any) {
-      console.error('Update error:', error);
       setErrorMessage(error.message || 'حدث خطأ أثناء تغيير كلمة المرور');
     } finally {
       setIsLoading(false);
