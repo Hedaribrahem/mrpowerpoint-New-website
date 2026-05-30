@@ -12,9 +12,9 @@ export default function PortfolioPage() {
         <meta name="description" content="شاهد أمثلة من أعمالنا في تصميم العروض التقديمية." />
       </Helmet>
 
-      <div className="pt-[72px]">
-        <div className="relative bg-gradient-to-b from-brand-red-transparent to-background py-12">
-          <div className="container-main mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div className="pt-[72px] relative bg-gradient-to-b from-brand-red-transparent to-background">
+        <div className="container-main mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center">
             <h1 className="text-3xl md:text-4xl font-bold mb-3">
               <span className="text-gradient">معرض الأعمال</span>
             </h1>
