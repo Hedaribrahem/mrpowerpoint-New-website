@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
+import { Toaster } from 'sonner'; // ✅ جديد
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ScrollToTop from '@/components/shared/ScrollToTop';
@@ -29,8 +30,8 @@ const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/RegisterPage'));
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
 const ContactPage = lazy(() => import('@/pages/ContactPage'));
-const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage')); // ✅ جديد
-const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage')); // ✅ جديد
+const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'));
 
 function LoadingFallback() {
   return (
@@ -62,6 +63,7 @@ export default function App() {
   return (
     <HelmetProvider>
       <ThemeProvider>
+        <Toaster position="top-center" richColors /> {/* ✅ جديد */}
         <ScrollToTop />
         <div className="min-h-screen flex flex-col bg-background text-foreground font-cairo">
           <Header />
@@ -85,8 +87,8 @@ export default function App() {
                 <Route path="/blog/:slug" element={<BlogPostPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} /> {/* ✅ جديد */}
-                <Route path="/reset-password" element={<ResetPasswordPage />} /> {/* ✅ جديد */}
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 
                 {/* ✅ Protected Routes - يحتاج تسجيل دخول */}
                 <Route path="/dashboard" element={
