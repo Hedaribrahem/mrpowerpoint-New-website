@@ -30,6 +30,9 @@ const navLinks = [
   { name: 'المنتدى', href: '/community', icon: MessageCircle },
 ];
 
+// ✅ الصفحات اللي فيها hero section (الهيدر يكون شفاف)
+const heroPages = ['/', '/templates', '/pricing', '/academy', '/store', '/services', '/community'];
+
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -49,6 +52,9 @@ export default function Header() {
     setIsMobileOpen(false);
   }, [location.pathname]);
 
+  // ✅ نتحقق إذا الصفحة الحالية فيها hero
+  const isHeroPage = heroPages.includes(location.pathname);
+
   const isActive = (href: string) => {
     if (href === '/') return location.pathname === '/';
     return location.pathname.startsWith(href);
@@ -67,7 +73,7 @@ export default function Header() {
     <>
       <header
         className={`fixed top-0 right-0 left-0 z-50 transition-all duration-300 ${
-          isScrolled
+          isScrolled || !isHeroPage
             ? 'glass-nav shadow-lg'
             : 'bg-transparent'
         }`}
@@ -96,10 +102,10 @@ export default function Header() {
                 </svg>
               </div>
               <div className="flex flex-col">
-                <span className={`font-bold text-lg leading-tight transition-colors ${isScrolled ? 'text-foreground' : 'text-foreground'}`}>
+                <span className="font-bold text-lg leading-tight text-foreground">
                   Mr PowerPoint
                 </span>
-                <span className={`text-[10px] leading-tight transition-colors ${isScrolled ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                <span className="text-[10px] leading-tight text-muted-foreground">
                   عروض تقديمية احترافية
                 </span>
               </div>
@@ -145,7 +151,7 @@ export default function Header() {
                 {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
 
-              {/* ✅ Desktop User Section - اسم المستخدم رابط للـ Dashboard */}
+              {/* Desktop User Section */}
               {isAuthenticated ? (
                 <div className="hidden sm:flex items-center gap-2">
                   <Link 
@@ -232,7 +238,7 @@ export default function Header() {
                 );
               })}
               
-              {/* ✅ Mobile User Section - اسم المستخدم رابط للـ Dashboard */}
+              {/* Mobile User Section */}
               <div className="pt-4 border-t border-border mt-4">
                 {isAuthenticated ? (
                   <>
