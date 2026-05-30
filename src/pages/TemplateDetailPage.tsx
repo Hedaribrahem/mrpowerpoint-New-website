@@ -30,7 +30,7 @@ export default function TemplateDetailPage() {
         <title>{template.title} | Mr PowerPoint</title>
       </Helmet>
 
-      <div className="pt-[72px]">
+      <div className="pt-[72px] bg-gradient-to-b from-brand-red-transparent to-background">
         <div className="container-main mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
