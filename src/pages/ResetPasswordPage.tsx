@@ -7,7 +7,6 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// ✅ Supabase client منفصل تماماً
 const resetSupabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function ResetPasswordPage() {
@@ -23,9 +22,22 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     async function initSession() {
       try {
-        // ✅ نقرأ الـ hash من sessionStorage
-        const hash = sessionStorage.getItem('supabase_recovery_hash');
+        // ✅ نقرأ الـ URL كامل (مع hash)
+        const fullUrl = window.location.href;
+        console.log('Full URL:', fullUrl);
         
+        // ✅ نبحث عن الـ hash
+        const hashIndex = fullUrl.indexOf('#');
+        console.log('Hash index:', hashIndex);
+        
+        let hash = '';
+        if (hashIndex !== -1) {
+          hash = fullUrl.substring(hashIndex);
+        }
+        
+        console.log('Hash found:', hash ? 'YES' : 'NO');
+        console.log('Hash:', hash);
+
         if (!hash || !hash.includes('access_token')) {
           setErrorMessage('رابط غير صالح أو منتهي الصلاحية');
           return;
@@ -35,9 +47,18 @@ export default function ResetPasswordPage() {
         const params = new URLSearchParams(hash.substring(1));
         const accessToken = params.get('access_token');
         const refreshToken = params.get('refresh_token');
+        const type = params.get('type');
+
+        console.log('access_token:', accessToken ? 'EXISTS' : 'NULL');
+        console.log('type:', type);
 
         if (!accessToken) {
-          setErrorMessage('رابط غير صالح');
+          setErrorMessage('رابط غير صالح - لا يوجد access_token');
+          return;
+        }
+
+        if (type !== 'recovery') {
+          setErrorMessage('رابط غير صالح - type غير صحيح');
           return;
         }
 
@@ -49,7 +70,7 @@ export default function ResetPasswordPage() {
 
         if (error) {
           console.error('setSession error:', error.message);
-          setErrorMessage('رابط منتهي الصلاحية');
+          setErrorMessage('رابط منتهي الصلاحية - ' + error.message);
           return;
         }
 
@@ -58,11 +79,8 @@ export default function ResetPasswordPage() {
           return;
         }
 
-        console.log('✅ Session created!');
+        console.log('✅ Session created successfully!');
         setIsReady(true);
-
-        // ✅ نمسح الـ hash
-        sessionStorage.removeItem('supabase_recovery_hash');
 
       } catch (err) {
         console.error('Init error:', err);
