@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
@@ -41,13 +41,9 @@ export default function Header() {
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  useEffect(() => {
-    setIsMobileOpen(false);
-  }, [location.pathname]);
 
   const isActive = (href: string) => {
     if (href === '/') return location.pathname === '/';
@@ -69,7 +65,7 @@ export default function Header() {
         className={`fixed top-0 right-0 left-0 z-50 transition-all duration-300 ${
           isScrolled
             ? 'glass-nav shadow-lg'
-            : 'bg-transparent backdrop-blur-none'
+            : 'bg-transparent backdrop-blur-none shadow-none'
         }`}
       >
         <div className="container-main mx-auto px-4 sm:px-6 lg:px-8">
@@ -220,6 +216,7 @@ export default function Header() {
                   <Link
                     key={link.href}
                     to={link.href}
+                    onClick={() => setIsMobileOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                       isActive(link.href)
                         ? 'text-brand-red bg-brand-red-transparent font-medium'
@@ -238,6 +235,7 @@ export default function Header() {
                   <>
                     <Link
                       to="/dashboard"
+                      onClick={() => setIsMobileOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 rounded-xl bg-muted hover:bg-muted/80 transition-colors"
                     >
                       <User className="w-5 h-5 text-brand-red" />
