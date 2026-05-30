@@ -17,27 +17,43 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     async function initSession() {
       try {
-        // ✅ نقرأ الـ token من الـ URL params (بدل hash)
+        // ✅ نقرأ الـ URL كامل
+        const fullUrl = window.location.href;
+        console.log('🔍 Full URL:', fullUrl);
+
+        // ✅ نبحث عن الـ token في URL params (بعد ?)
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token');
-        const type = urlParams.get('type');
+        let token = urlParams.get('token');
+        let type = urlParams.get('type');
 
-        console.log('Token from URL:', token ? 'EXISTS' : 'NULL');
-        console.log('Type:', type);
+        // ✅ إذا ما لقينا في params، نجرب الـ hash (بعد #)
+        if (!token) {
+          const hash = window.location.hash;
+          console.log('🔍 Hash:', hash);
+          
+          if (hash && hash.length > 1) {
+            const hashParams = new URLSearchParams(hash.substring(1));
+            token = hashParams.get('access_token');
+            type = hashParams.get('type');
+          }
+        }
 
-        if (!token || type !== 'recovery') {
+        console.log('🔍 Token:', token ? 'EXISTS' : 'NULL');
+        console.log('🔍 Type:', type);
+
+        if (!token) {
           setErrorMessage('رابط غير صالح أو منتهي الصلاحية');
           return;
         }
 
-        // ✅ نستخدم verifyOtp عشان نتحقق من الـ token
-        const { data, error } = await supabase.auth.verifyOtp({
-          token_hash: token,
-          type: 'recovery',
+        // ✅ نعين الـ session
+        const { data, error } = await supabase.auth.setSession({
+          access_token: token,
+          refresh_token: '',
         });
 
         if (error) {
-          console.error('verifyOtp error:', error.message);
+          console.error('❌ setSession error:', error.message);
           setErrorMessage('رابط منتهي الصلاحية');
           return;
         }
@@ -47,11 +63,11 @@ export default function ResetPasswordPage() {
           return;
         }
 
-        console.log('✅ Session verified!');
+        console.log('✅ Session created!');
         setIsReady(true);
 
       } catch (err) {
-        console.error('Init error:', err);
+        console.error('❌ Init error:', err);
         setErrorMessage('حدث خطأ غير متوقع');
       }
     }
