@@ -2,12 +2,7 @@ import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-const resetSupabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from '@/lib/supabase';
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
@@ -22,55 +17,28 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     async function initSession() {
       try {
-        // ✅ نقرأ الـ URL كامل (مع hash)
-        const fullUrl = window.location.href;
-        console.log('Full URL:', fullUrl);
-        
-        // ✅ نبحث عن الـ hash
-        const hashIndex = fullUrl.indexOf('#');
-        console.log('Hash index:', hashIndex);
-        
-        let hash = '';
-        if (hashIndex !== -1) {
-          hash = fullUrl.substring(hashIndex);
-        }
-        
-        console.log('Hash found:', hash ? 'YES' : 'NO');
-        console.log('Hash:', hash);
+        // ✅ نقرأ الـ token من الـ URL params (بدل hash)
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const type = urlParams.get('type');
 
-        if (!hash || !hash.includes('access_token')) {
+        console.log('Token from URL:', token ? 'EXISTS' : 'NULL');
+        console.log('Type:', type);
+
+        if (!token || type !== 'recovery') {
           setErrorMessage('رابط غير صالح أو منتهي الصلاحية');
           return;
         }
 
-        // ✅ نحول الـ hash لـ params
-        const params = new URLSearchParams(hash.substring(1));
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-        const type = params.get('type');
-
-        console.log('access_token:', accessToken ? 'EXISTS' : 'NULL');
-        console.log('type:', type);
-
-        if (!accessToken) {
-          setErrorMessage('رابط غير صالح - لا يوجد access_token');
-          return;
-        }
-
-        if (type !== 'recovery') {
-          setErrorMessage('رابط غير صالح - type غير صحيح');
-          return;
-        }
-
-        // ✅ نعين الـ session
-        const { data, error } = await resetSupabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || '',
+        // ✅ نستخدم verifyOtp عشان نتحقق من الـ token
+        const { data, error } = await supabase.auth.verifyOtp({
+          token_hash: token,
+          type: 'recovery',
         });
 
         if (error) {
-          console.error('setSession error:', error.message);
-          setErrorMessage('رابط منتهي الصلاحية - ' + error.message);
+          console.error('verifyOtp error:', error.message);
+          setErrorMessage('رابط منتهي الصلاحية');
           return;
         }
 
@@ -79,7 +47,7 @@ export default function ResetPasswordPage() {
           return;
         }
 
-        console.log('✅ Session created successfully!');
+        console.log('✅ Session verified!');
         setIsReady(true);
 
       } catch (err) {
@@ -110,7 +78,7 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      const { error } = await resetSupabase.auth.updateUser({
+      const { error } = await supabase.auth.updateUser({
         password,
       });
 
