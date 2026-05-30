@@ -20,7 +20,15 @@ export default function LoginPage() {
     setErrorMessage('');
 
     try {
-      await signIn(email, password, remember); // ✅ أضفنا remember هنا
+      const data = await signIn(email, password, remember);
+      
+      // ✅ نتحقق من تأكيد البريد الإلكتروني
+      if (data.user && !data.user.email_confirmed_at) {
+        setErrorMessage('يرجى تأكيد بريدك الإلكتروني أولاً');
+        setIsLoading(false);
+        return;
+      }
+      
       navigate('/dashboard');
     } catch (error: any) {
       let message = 'حدث خطأ أثناء تسجيل الدخول';

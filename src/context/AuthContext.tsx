@@ -17,7 +17,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (token) {
       const parsed = JSON.parse(token);
-      // ✅ نتحقق من الـ token صالح
       supabase.auth.setSession({
         access_token: parsed.access_token,
         refresh_token: parsed.refresh_token,
@@ -26,19 +25,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(session);
           fetchUserProfile(session.user.id);
         } else {
-          // ❌ Token غير صالح
           clearAuth();
         }
       });
     } else {
-      // ❌ لا يوجد token
       clearAuth();
     }
 
     return () => {};
   }, []);
 
-  // ✅ نراقب تغييرات الصفحة
   useEffect(() => {
     const handleStorageChange = () => {
       const remember = localStorage.getItem('auth_remember');
@@ -59,7 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setIsLoading(false);
-    // ✅ نمسح Supabase session من الذاكرة
     supabase.auth.signOut();
   }
 
@@ -113,6 +108,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     
     if (error) throw error;
+    
+    // ✅ نتحقق من تأكيد البريد الإلكتروني
+    if (data.user && !data.user.email_confirmed_at) {
+      throw new Error('email not confirmed');
+    }
     
     if (data.session) {
       const token = JSON.stringify({

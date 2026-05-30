@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserPlus, Mail, Lock, Eye, EyeOff, User, CheckCircle } from 'lucide-react';
+import { UserPlus, Mail, Lock, Eye, EyeOff, User, CheckCircle, MailCheck } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 
@@ -40,8 +40,6 @@ export default function RegisterPage() {
       
       setIsSuccess(true);
       
-      // ❌ لا انتقال تلقائي - المستخدم يضغط الزر بنفسه
-      
     } catch (error: any) {
       let errorMessage = 'حدث خطأ أثناء إنشاء الحساب';
       
@@ -62,7 +60,7 @@ export default function RegisterPage() {
     }
   };
 
-  // ✅ شاشة النجاح - بدون انتقال تلقائي نهائياً
+  // ✅ شاشة النجاح - مع رسالة تأكيد البريد
   if (isSuccess) {
     return (
       <>
@@ -78,15 +76,26 @@ export default function RegisterPage() {
               </div>
               
               <h1 className="text-3xl font-bold mb-2">تم التسجيل بنجاح! 🎉</h1>
-              <p className="text-muted-foreground mb-6">
-                تم إنشاء حسابك بنجاح. يمكنك الآن تسجيل الدخول.
+              <p className="text-muted-foreground mb-2">
+                تم إنشاء حسابك بنجاح.
               </p>
+              
+              {/* ✅ رسالة تأكيد البريد */}
+              <div className="bg-brand-red-transparent rounded-xl p-4 mb-6">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <MailCheck className="w-6 h-6 text-brand-red" />
+                  <span className="font-bold text-brand-red">تأكيد البريد الإلكتروني</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  يرجى التحقق من بريدك الإلكتروني واضغط على رابط التأكيد لتفعيل حسابك
+                </p>
+              </div>
               
               <button 
                 onClick={() => navigate('/login')}
                 className="w-full btn-primary py-3"
               >
-                تسجيل الدخول الآن
+                تسجيل الدخول
               </button>
               
             </div>
