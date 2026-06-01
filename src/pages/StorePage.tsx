@@ -48,7 +48,7 @@ export default function StorePage() {
         <meta name="description" content="أيقونات، مخططات بيانية، خطوط عربية، وحزم ألوان احترافية." />
       </Helmet>
 
-      <div className="pt-[72px]">
+      <div className="pt-[72px] bg-gradient-to-b from-brand-red-transparent to-background">
         <div className="relative bg-gradient-to-b from-brand-red-transparent to-background py-12">
           <div className="container-main mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between">

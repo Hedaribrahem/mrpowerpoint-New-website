@@ -25,7 +25,7 @@ export default function AboutPage() {
         <meta name="description" content="تعرف على قصة Mr PowerPoint، رؤيتنا، وفريقنا." />
       </Helmet>
 
-      <div className="pt-[72px]">
+      <div className="pt-[72px] bg-gradient-to-b from-brand-red-transparent to-background">
         <div className="relative bg-gradient-to-b from-brand-red-transparent to-background py-12">
           <div className="container-main mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-3xl md:text-4xl font-bold mb-3">
