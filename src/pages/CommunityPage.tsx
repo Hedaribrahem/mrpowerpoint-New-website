@@ -12,17 +12,16 @@ export default function CommunityPage() {
         <meta name="description" content="انضم لمجتمع مصممي العروض التقديمية. استفسر، شارك أعمالك، واطلب تصاميم." />
       </Helmet>
 
-      <div className="pt-[72px] bg-gradient-to-b from-brand-red-transparent to-background">
-        <div className="relative bg-gradient-to-b from-brand-red-transparent to-background py-12">
-          <div className="container-main mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <h1 className="text-3xl md:text-4xl font-bold mb-3">
-                <span className="text-gradient">مجتمع المصممين</span>
-              </h1>
-              <p className="text-muted-foreground max-w-xl mx-auto mb-6">
-                انضم لمجتمعنا النشط من مصممي العروض التقديمية
-              </p>
-              <div className="flex items-center justify-center gap-8">
+      <div className="pt-[72px] relative bg-gradient-to-b from-brand-red-transparent to-background">
+        <div className="container-main mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center">
+            <h1 className="text-3xl md:text-4xl font-bold mb-3">
+              <span className="text-gradient">مجتمع المصممين</span>
+            </h1>
+            <p className="text-muted-foreground max-w-xl mx-auto mb-6">
+              انضم لمجتمعنا النشط من مصممي العروض التقديمية
+            </p>
+            <div className="flex items-center justify-center gap-8">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-brand-red">1,200+</div>
                   <div className="text-sm text-muted-foreground">عضو</div>
