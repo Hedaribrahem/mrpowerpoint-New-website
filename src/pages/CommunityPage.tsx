@@ -40,7 +40,6 @@ export default function CommunityPage() {
             </div>
           </div>
         </div>
-      </div>
 
       <section className="section-padding pt-8">
         <div className="container-main mx-auto px-4 sm:px-6 lg:px-8">
