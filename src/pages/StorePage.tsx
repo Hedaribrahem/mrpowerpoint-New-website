@@ -10,7 +10,7 @@ interface CartItem {
 
 export default function StorePage() {
   const [activeCategory, setActiveCategory] = useState('all');
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const [addedToCart, setAddedToCart] = useState<number | null>(null);
 
@@ -48,28 +48,27 @@ export default function StorePage() {
         <meta name="description" content="أيقونات، مخططات بيانية، خطوط عربية، وحزم ألوان احترافية." />
       </Helmet>
 
-      <div className="pt-[72px] bg-gradient-to-b from-brand-red-transparent to-background">
-        <div className="relative bg-gradient-to-b from-brand-red-transparent to-background py-12">
-          <div className="container-main mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                  <span className="text-gradient">Mr Store</span>
-                </h1>
-                <p className="text-muted-foreground">موارد احترافية لتصميم عروضك</p>
-              </div>
-              <button
-                onClick={() => setShowCart(!showCart)}
-                className="relative p-3 rounded-xl bg-muted hover:bg-muted/80 transition-colors"
-              >
-                <ShoppingCart className="w-6 h-6" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-brand-red text-white text-xs flex items-center justify-center">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
+      {/* ✅ نفس طريقة النماذج - Hero يبدأ من فوق */}
+      <div className="pt-[72px] relative bg-gradient-to-b from-brand-red-transparent to-background">
+        <div className="container-main mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                <span className="text-gradient">Mr Store</span>
+              </h1>
+              <p className="text-muted-foreground">موارد احترافية لتصميم عروضك</p>
             </div>
+            <button
+              onClick={() => setShowCart(!showCart)}
+              className="relative p-3 rounded-xl bg-muted hover:bg-muted/80 transition-colors"
+            >
+              <ShoppingCart className="w-6 h-6" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-brand-red text-white text-xs flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </div>
