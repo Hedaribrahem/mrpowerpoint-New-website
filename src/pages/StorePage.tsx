@@ -10,7 +10,7 @@ interface CartItem {
 
 export default function StorePage() {
   const [activeCategory, setActiveCategory] = useState('all');
-  const [cart, setCart] = useState<<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const [addedToCart, setAddedToCart] = useState<number | null>(null);
 
